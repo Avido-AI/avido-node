@@ -1,14 +1,14 @@
 import context from "./context";
 import type { WrappableFn } from "./types";
 
-type ChainableContext<T extends (...args: any) => any> = {
+type ChainableContext<T extends WrappableFn> = {
   target: any;
   next: (target: any) => Promise<ReturnType<T>>;
 };
 
 /**
- * Inject a previous run ID into the context
- * For example, to tie back to frontend events
+ * Inject the parent run ID into the context
+ * Use this to define the hierarchy of your thread
  * @param {string} runId - Previous run ID
  */
 async function setParent<T extends WrappableFn>(

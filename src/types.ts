@@ -11,7 +11,8 @@ export interface AvidoInitOptions {
   appId?: string;
   apiKey?: string;
   apiUrl?: string;
-  runtime?: string
+  runtime?: string;
+  onlySendEvals?: boolean;
 }
 
 export type OpenAIMessage = {
@@ -44,6 +45,7 @@ export interface Event {
   timestamp: number;
   userId?: string;
   parentRunId?: string;
+  evaluationId?: string;
   params?: cJSON;
   metadata?: cJSON;
   runtime?: string;
@@ -103,6 +105,7 @@ export type WrapExtras = {
   metadata?: cJSON;
   params?: cJSON;
   userId?: string;
+  evaluationId?: string;
 };
 
 export type WrapParams<T extends WrappableFn> = {
@@ -111,11 +114,13 @@ export type WrapParams<T extends WrappableFn> = {
   metadata?: cJSON;
   params?: cJSON;
   userId?: string;
+  evaluationId?: string;
   nameParser?: (...args: Parameters<T>) => string;
   inputParser?: (...args: Parameters<T>) => any;
   outputParser?: (result: Awaited<ReturnType<T>>) => any;
   paramsParser?: (...args: Parameters<T>) => Record<string, unknown>;
   metadataParser?: (...args: Parameters<T>) => cJSON | undefined;
+  evaluationIdParser?: (...args: Parameters<T>) => string | undefined;
   tokensUsageParser?: (result: Awaited<ReturnType<T>>) => Promise<{
     completion: number | undefined;
     prompt: number | undefined;
@@ -129,7 +134,7 @@ export type WrapParams<T extends WrappableFn> = {
   ) => AsyncIterable<T>;
 } & WrapExtras;
 
-export type WrappableFn = (...args: unknown[]) => unknown;
+export type WrappableFn = (...args: any[]) => any;
 
 export type Identify<T extends WrappableFn> = (
   userId: string,

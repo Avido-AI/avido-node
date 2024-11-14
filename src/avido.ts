@@ -27,14 +27,20 @@ class Avido {
   apiUrl?: string;
   context?: any;
   runtime?: string;
+  onlySendEvals: boolean = true;
   queue: Event[] = [];
 
   private running = false;
 
+  private shouldSendEvent(): boolean {
+    const evalContext = this.context?.evaluation.get();
+    return !this.onlySendEvals || !!evalContext?.id;
+  }
+
   /**
    * @param {AvidoInitOptions} options
    */
-  constructor(context?: { runId: any; user: any; }) {
+  constructor(context?: { runId: any; user: any; evaluation?: any }) {
     this.init({
       appId: checkEnv("AVIDO_APP_ID"),
       apiKey: checkEnv("AVIDO_API_KEY"),
@@ -45,10 +51,11 @@ class Avido {
     this.context = context;
   }
 
-  init({ appId, apiKey, apiUrl }: AvidoInitOptions = {}) {
+  init({ appId, apiKey, apiUrl, onlySendEvals = true }: AvidoInitOptions = {}) {
     if (appId) this.appId = appId;
     if (apiKey) this.apiKey = apiKey;
     if (apiUrl) this.apiUrl = apiUrl;
+    this.onlySendEvals = onlySendEvals;
   }
 
   /**
@@ -71,6 +78,11 @@ class Avido {
       return;
     }
 
+    // If onlySendEvals is true and we don't have an evaluationId, skip sending
+    if (!this.shouldSendEvent()) {
+      return;
+    }
+
     let timestamp = Date.now();
     const lastEvent = this.queue?.[this.queue.length - 1];
     if (lastEvent && lastEvent.timestamp >= timestamp) {
@@ -79,7 +91,8 @@ class Avido {
 
     const runId = generateUUID();
     const parentRunId = data.parentRunId;
-    const userId = data.userId
+    const userId = data.userId;
+    const evaluationId = data.evaluationId;
     const runtime = data.runtime ?? this.runtime;
 
     const eventData: Event = {
@@ -88,11 +101,11 @@ class Avido {
       type,
       userId,
       parentRunId,
+      evaluationId,
       timestamp,
       runtime,
       ...cleanExtra(data),
     };
-
 
     this.queue.push(eventData);
 
@@ -167,12 +180,10 @@ class Avido {
   openThread(
     params?:
       | string
-      | { id?: string; tags?: string[]; userId?: string; userProps?: cJSON }
+      | { id?: string; tags?: string[]; userId?: string; userProps?: cJSON; evaluationId?: string }
   ) {
-    return new Thread(
-      this,
-      typeof params === "string" ? { id: params } : params || {}
-    );
+    const threadParams = typeof params === "string" ? { id: params } : params || {};
+    return new Thread(this, threadParams);
   }
 
   /**

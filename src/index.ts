@@ -79,6 +79,7 @@ class BackendMonitor extends Avido {
       params,
       track,
       userId,
+      evaluationId,
     }: WrapParams<T> = properties || {};
 
     // Get extra data from function or params
@@ -88,12 +89,12 @@ class BackendMonitor extends Avido {
     const metadataData = properties?.metadataParser
       ? properties.metadataParser(...args)
       : metadata;
-
-
-
     const userIdData = properties?.userIdParser
       ? properties.userIdParser(...args)
       : userId;
+    const evaluationIdData = properties?.evaluationIdParser
+      ? properties.evaluationIdParser(...args)
+      : evaluationId;
 
     const input = inputParser
       ? inputParser(...args)
@@ -107,6 +108,7 @@ class BackendMonitor extends Avido {
         params: paramsData,
         metadata: metadataData,
         userId: userIdData,
+        evaluationId: evaluationIdData,
       });
     }
 
@@ -122,9 +124,10 @@ class BackendMonitor extends Avido {
 
       this.trackEvent(type, "end", {
         runId,
-        name, 
+        name,
         output: outputParser ? outputParser(output) : output,
         tokensUsage,
+        evaluationId: evaluationIdData,
       });
 
       if (shouldWaitUntil) {
@@ -159,6 +162,7 @@ class BackendMonitor extends Avido {
         this.trackEvent(type, "error", {
           runId,
           error: cleanError(error),
+          evaluationId: evaluationIdData,
         });
 
         // Process queue immediately as if there is an uncaught exception next, it won't be processed
