@@ -1,6 +1,7 @@
 import type Avido from "./avido";
 import type { cJSON } from "./types";
 import { generateUUID } from "./utils";
+import context from "./context";
 
 type Message = {
   id?: string;
@@ -12,7 +13,6 @@ type Message = {
 
 export class Thread {
   public id: string;
-
   private observer: Avido;
 
   constructor(
@@ -32,15 +32,17 @@ export class Thread {
    * @returns {string} - The message ID
    * */
 
-  trackMessage = (message: Message): string => {
+  trackMessage = (message: Message): Promise<string> => {
     const runId = message.id ?? generateUUID();
 
-    this.observer.trackEvent("thread", "chat", {
-      runId,
-      parentRunId: this.id,
-      message,
-    });
+    return context.runId.callAsync(runId, async () => {
+      this.observer.trackEvent("thread", "chat", {
+        runId,
+        parentRunId: this.id, 
+        message,
+      });
 
-    return runId;
+      return runId;
+    });
   };
 }

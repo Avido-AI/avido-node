@@ -27,13 +27,6 @@ class BackendMonitor extends Avido {
 
       const proxy = new Proxy(callInfo, {
         get: (target, prop) => {
-          if (prop === "identify") {
-            return chainable.identify.bind({
-              target,
-              next: avido.executeWrappedFunction.bind(avido),
-            });
-          }
-
           if (prop === "setParent") {
             return chainable.setParent.bind({
               target,

@@ -35,7 +35,7 @@ export type OpenAIMessage = {
 
 export type TraceType = "log" | "tool" | "llm" | "chat" | "thread";
 
-export type EventType = "start" | "end" | "error" | "info" | "chat";
+export type EventType = "start" | "end" | "error" | "info" | "chat" | "tool_call";
 
 export interface Event {
   runId: string;
@@ -58,11 +58,19 @@ export type TokenUsage = {
   prompt: number | undefined;
 };
 
+export interface ToolCallData {
+  tool_call_id: string;
+  tool_call_name: string;
+  tool_call_input: cJSON;
+  tool_call_output: cJSON;
+}
+
 export interface TraceEvent extends Event {
   runId: string;
   input?: cJSON;
   output?: cJSON;
   tokensUsage?: TokenUsage;
+  tool_call?: ToolCallData;
   [key: string]: unknown;
 }
 
@@ -137,7 +145,6 @@ export type WrappedReturn<T extends WrappableFn> = ReturnType<T> & {
   setParent: SetParent<T>;
 };
 
-// Create a type for the function returning that promise
 export type WrappedFn<T extends WrappableFn> = (
   ...args: Parameters<T>
 ) => WrappedReturn<T>;

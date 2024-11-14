@@ -39,7 +39,7 @@ class Avido {
       appId: checkEnv("AVIDO_APP_ID"),
       apiKey: checkEnv("AVIDO_API_KEY"),
       apiUrl: checkEnv("AVIDO_API_URL") ?? "https://api.avido.io/v1",
-      runtime: "avido-js",
+      runtime: "avido-node",
     });
 
     this.context = context;
@@ -57,7 +57,7 @@ class Avido {
    * @param {EventType} event - The name of the event.
    * @param {Partial<TraceEvent | LogEvent>} data - The data associated with the event.
    * @example
-   * monitor.trackEvent("llm", "start", { name: "gpt-4", input: "Hello I'm a bot" });
+   * monitor.trackEvent("llm", "start", { name: "gpt-4o", input: "Hi, how can I help you?" });
    */
   trackEvent(
     type: TraceType,
@@ -103,6 +103,32 @@ class Avido {
     }
   }
 
+  /**
+   * Manually track a tool call event.
+   * @param {string} toolCallId - The ID of the tool call
+   * @param {string} toolName - The name of the tool being called
+   * @param {cJSON} input - The input parameters for the tool
+   * @param {cJSON} output - The output from the tool
+   * @param {string} parentId - The ID of the parent event this tool call belongs to
+   */
+  trackToolCall(
+    toolCallId: string,
+    toolName: string,
+    input: cJSON,
+    output: cJSON,
+    parentId: string
+  ): void {
+    this.trackEvent("tool", "tool_call", {
+      tool_call: {
+        tool_call_id: toolCallId,
+        tool_call_name: toolName,
+        tool_call_input: input,
+        tool_call_output: output
+      },
+      parentRunId: parentId
+    });
+  }
+
   // Wait 500ms to allow other events to be added to the queue
   private debouncedProcessQueue = debounce(() => this.processQueue());
 
@@ -120,7 +146,7 @@ class Avido {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${this.apiKey}`,
-          "avido-application-id": `${this.appId}`,
+          "x-avido-app-id": `${this.appId}`,
         },
         body: JSON.stringify({ events: copy }),
       });
@@ -150,37 +176,18 @@ class Avido {
   }
 
   /**
-   * Use this to log any external action or tool you use.
-   * @param {string} message - Log message
-   * @param {any} extra - Extra data to pass
-   * @example
-   * monitor.info("Running tool Google Search")
-   **/
-  info(message: string, extra?: any) {
-    this.trackEvent("log", "info", {
-      message,
-      extra,
-    });
-  }
-
-  log(message: string, extra?: any) {
-    this.info(message, extra);
-  }
-
-  /**
    * Report any errors that occur during the conversation.
    * @param {string} message - Error message
    * @param {any} error - Error object
    * @example
    * try {
-   *   const answer = await model.generate("Hello")
-   *   monitor.result(answer)
+   *   const response = await openai.generate("Help!")
+   *   observer.result(response)
    * } catch (error) {
-   *   monitor.error("Error generating answer", error)
+   *   observer.error("Something went wrong", error)
    * }
    */
   error(message: string | any, error?: any) {
-    // More concise implementation
     if (typeof message === "object") {
       error = message;
       message = error.message ?? undefined;

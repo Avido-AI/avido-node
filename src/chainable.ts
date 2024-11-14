@@ -1,26 +1,10 @@
-import ctx from "./context";
-import type { WrappableFn, cJSON } from "./types";
+import context from "./context";
+import type { WrappableFn } from "./types";
 
-/**
- * Identify the user (optional)
- * @param {string} userId - User ID
- * @param {cJSON} userProps - User properties object
- */
-async function identify<T extends WrappableFn>(
-  userId: string,
-  userProps?: cJSON
-): Promise<ReturnType<T>> {
-  const { target, next } = this;
-
-  const context = {
-    userId,
-    userProps,
-  };
-
-  return ctx.user.callAsync(context, async () => {
-    return next(target);
-  });
-}
+type ChainableContext<T extends (...args: any) => any> = {
+  target: any;
+  next: (target: any) => Promise<ReturnType<T>>;
+};
 
 /**
  * Inject a previous run ID into the context
@@ -28,16 +12,16 @@ async function identify<T extends WrappableFn>(
  * @param {string} runId - Previous run ID
  */
 async function setParent<T extends WrappableFn>(
+  this: ChainableContext<T>,
   runId: string
 ): Promise<ReturnType<T>> {
   const { target, next } = this;
 
-  return ctx.runId.callAsync(runId, async () => {
+  return context.runId.callAsync(runId, async () => {
     return next(target);
   });
 }
 
 export default {
-  identify,
   setParent,
 };

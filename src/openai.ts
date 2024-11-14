@@ -1,12 +1,7 @@
 // Thank you Lunary for making this MVP possible
 // Support for old OpenAI v3
 
-import {
-  ChatMessage,
-  WrapExtras,
-  WrappedReturn,
-  cJSON,
-} from "./types"
+import type { ChatMessage, ToolCallData, WrapExtras, WrappedReturn, cJSON } from "./types"
 
 import OpenAI from "openai"
 import { APIPromise } from "openai/core"
@@ -31,6 +26,15 @@ const parseOpenaiMessage = (message: any) => {
     name,
   } as ChatMessage
 }
+
+const parseToolCall = (toolCall: any): ToolCallData => {
+  return {
+    tool_call_id: toolCall.id,
+    tool_call_name: toolCall.function.name,
+    tool_call_input: JSON.parse(toolCall.function.arguments || "{}"),
+    tool_call_output: null // This will be filled in later when the tool responds
+  };
+};
 
 // Forks a stream in two
 // https://stackoverflow.com/questions/63543455/how-to-multicast-an-async-iterable
@@ -66,7 +70,6 @@ const teeAsync = (iterable: any) => {
 /* Just forwarding the types doesn't work, as it's an overloaded function (tried many solutions, couldn't get it to work) */
 type NewParams = {
   tags?: string[]
-  userProps?: cJSON
   metadata?: cJSON
 }
 
@@ -115,7 +118,7 @@ const PARAMS_TO_CAPTURE = [
 
 type WrappedOpenAi<T> = Omit<T, "chat"> & WrapCreate
 
-export function monitorOpenAI<T extends any>(
+export function observeOpenAI<T extends any>(
   openai: T,
   params: WrapExtras = {}
 ): WrappedOpenAi<T> {
@@ -137,24 +140,17 @@ export function monitorOpenAI<T extends any>(
 
         const { index, delta } = chunk
 
-        const { content, function_call, role, tool_calls } = delta
+        const { content, role, tool_calls } = delta
 
         if (!choices[index]) {
           choices.splice(index, 0, {
-            message: { role, content, function_call, tool_calls: [] },
+            message: { role, content, tool_calls: [] },
           })
         }
 
         if (content) choices[index].message.content += content || ""
 
         if (role) choices[index].message.role = role
-
-        if (function_call?.name)
-          choices[index].message.function_call.name = function_call.name
-
-        if (function_call?.arguments)
-          choices[index].message.function_call.arguments +=
-            function_call.arguments
 
         if (tool_calls) {
           for (const tool_call of tool_calls) {
@@ -163,7 +159,8 @@ export function monitorOpenAI<T extends any>(
             ].message.tool_calls.findIndex((tc: { index: any }) => tc.index === tool_call.index)
 
             if (existingCallIndex === -1) {
-              choices[index].message.tool_calls.push(tool_call)
+              const parsedToolCall = parseToolCall(tool_call);
+              choices[index].message.tool_calls.push(parsedToolCall);
             } else {
               const existingCall =
                 choices[index].message.tool_calls[existingCallIndex]
