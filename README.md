@@ -1,4 +1,5 @@
 <div align="center">
+  ![hero-light 2](https://github.com/user-attachments/assets/d919a024-ab1e-4b40-96f1-b2fa1778cddd)
   <h3>Avido Node.js SDK</h3>
   <a href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/License-MIT-blue.svg" style="width: 100px; height: 28px;" />
@@ -9,8 +10,8 @@
 
 Learn more about the Avido Node.js SDK in the [official documentation](https://docs.avido.io/sdk).
 
-[!CAUTION]
-This is an early preview release of the Avido SDK built on top of existing open source libraries. Do not use in production if you are not actively working on an implementation with the Avido team. To learn more, visit avido.io or reach out at alexander@avido.io.
+> [!CAUTION]
+> This is an early preview release of the Avido SDK built on top of existing open source libraries. Do not use in production if you are not actively working on > an implementation with the Avido team. To learn more, visit avido.io or reach out at alexander@avido.io.
 
 <!-- Start Table of Contents [toc] -->
 ## Table of Contents
