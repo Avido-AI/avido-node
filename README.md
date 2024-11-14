@@ -1,5 +1,5 @@
 <div align="center">
-  ![hero-light 2](https://github.com/user-attachments/assets/d919a024-ab1e-4b40-96f1-b2fa1778cddd)
+  ![Avido Node.js SDK](https://github.com/user-attachments/assets/d919a024-ab1e-4b40-96f1-b2fa1778cddd)
   <h3>Avido Node.js SDK</h3>
   <a href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/License-MIT-blue.svg" style="width: 100px; height: 28px;" />
