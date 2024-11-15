@@ -29,8 +29,6 @@ class Avido {
   runtime?: string;
   onlySendEvals: boolean = true;
   queue: Event[] = [];
-  private currentLLMRunId?: string;
-
   private running = false;
 
   private shouldSendEvent(): boolean {
@@ -123,12 +121,14 @@ class Avido {
    * @param {string} toolName - The name of the tool being called
    * @param {cJSON} input - The input parameters for the tool
    * @param {cJSON} output - The output from the tool
+   * @param {string} [parentRunId] - Parent run ID to link this tool call to, usually the thread id
    */
   trackToolCall(
     toolCallId: string,
     toolName: string,
     input: cJSON,
     output: cJSON,
+    parentRunId: string,
   ): void {
     // Track tool call with current LLM event as parent
     this.trackEvent("tool", "end", {
@@ -136,7 +136,7 @@ class Avido {
       tool_call_name: toolName,
       tool_call_input: input,
       tool_call_output: output,
-      parentRunId: this.currentLLMRunId
+      parentRunId,
     });
   }
 
