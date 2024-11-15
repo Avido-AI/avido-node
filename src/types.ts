@@ -108,20 +108,17 @@ export type WrapExtras = {
   evaluationId?: string;
 };
 
-export type WrapParams<T extends WrappableFn> = {
+export interface WrapParams<T extends WrappableFn> extends WrapExtras {
   track?: boolean;
-  name?: string;
-  metadata?: cJSON;
-  params?: cJSON;
-  userId?: string;
-  evaluationId?: string;
   nameParser?: (...args: Parameters<T>) => string;
   inputParser?: (...args: Parameters<T>) => any;
   outputParser?: (result: Awaited<ReturnType<T>>) => any;
-  paramsParser?: (...args: Parameters<T>) => Record<string, unknown>;
+  paramsParser?: (...args: Parameters<T>) => cJSON;
   metadataParser?: (...args: Parameters<T>) => cJSON | undefined;
   evaluationIdParser?: (...args: Parameters<T>) => string | undefined;
-  tokensUsageParser?: (result: Awaited<ReturnType<T>>) => Promise<{
+  tokensUsageParser?: (
+    result: Awaited<ReturnType<T>>
+  ) => Promise<{
     completion: number | undefined;
     prompt: number | undefined;
   }>;
@@ -132,7 +129,7 @@ export type WrapParams<T extends WrappableFn> = {
     onComplete: (res: any) => void,
     onError: (error: unknown) => void
   ) => AsyncIterable<T>;
-} & WrapExtras;
+}
 
 export type WrappableFn = (...args: any[]) => any;
 
@@ -153,3 +150,11 @@ export type WrappedReturn<T extends WrappableFn> = ReturnType<T> & {
 export type WrappedFn<T extends WrappableFn> = (
   ...args: Parameters<T>
 ) => WrappedReturn<T>;
+
+export interface CallInfo<T extends WrappableFn> {
+  type: TraceType;
+  func: T;
+  args: Parameters<T>;
+  params?: WrapParams<T>;
+  _parentRunId?: string;
+}

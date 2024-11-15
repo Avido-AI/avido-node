@@ -208,10 +208,9 @@ export function observeOpenAI<T>(
       }
       return {
         ...cleanExtra(rawExtra),
-        // Don't pass parentRunId here - let the LLM chain be independent
         tools: request.tools || request.functions,
         tool_choice: request.tool_choice || request.function_call
-      }
+      } as cJSON
     },
     metadataParser(request) {
       const metadata = request.metadata

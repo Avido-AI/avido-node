@@ -100,9 +100,9 @@ export const getFunctionInput = (
     argNames.length === 1
       ? args[0]
       : argNames.reduce((obj, argName, index) => {
-          obj[argName] = args[index];
-          return obj;
-        }, {} as Record<string, unknown>);
+        obj[argName] = args[index];
+        return obj;
+      }, {} as Record<string, unknown>);
 
   return input;
 };

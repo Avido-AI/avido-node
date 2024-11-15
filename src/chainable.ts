@@ -17,6 +17,9 @@ async function setParent<T extends WrappableFn>(
 ): Promise<ReturnType<T>> {
   const { target, next } = this;
 
+  // Store the parent run ID in the target for tracking
+  target._parentRunId = runId;
+
   return context.runId.callAsync(runId, async () => {
     return next(target);
   });

@@ -1,6 +1,6 @@
 import { cleanError, generateUUID, getFunctionInput } from "./utils";
 
-import type { TraceType, WrapParams, WrappableFn, WrappedFn } from "./types";
+import type { TraceType, WrapParams, WrappableFn, WrappedFn, CallInfo, cJSON } from "./types";
 
 import chainable from "./chainable";
 import ctx from "./context";
@@ -56,7 +56,7 @@ class BackendMonitor extends Avido {
   }
 
   // Extract the actual execution logic into a function
-  private async executeWrappedFunction<T extends WrappableFn>(target: { type: any; func: any; args: any; params: any; }) {
+  private async executeWrappedFunction<T extends WrappableFn>(target: CallInfo<T>) {
     const { type, args, func, params: properties } = target;
 
     // Generate a random ID for this run (will be injected into the context)
@@ -103,10 +103,11 @@ class BackendMonitor extends Avido {
         runId,
         input,
         name,
-        params: paramsData,
+        params: paramsData as cJSON,
         metadata: metadataData,
         userId: userIdData,
         evaluationId: evaluationIdData,
+        parentRunId: target._parentRunId
       });
     }
 
@@ -126,6 +127,7 @@ class BackendMonitor extends Avido {
         output: outputParser ? outputParser(output) : output,
         tokensUsage,
         evaluationId: evaluationIdData,
+        parentRunId: target._parentRunId
       });
 
       if (shouldWaitUntil) {
