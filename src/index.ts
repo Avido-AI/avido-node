@@ -14,8 +14,6 @@ class BackendMonitor extends Avido {
     func: T,
     params?: WrapParams<T>
   ): WrappedFn<T> {
-    const avido = this;
-
     const wrappedFn = (...args: Parameters<T>) => {
       // Don't pass the function directly to proxy to avoid it being called directly
       const callInfo = {
@@ -206,3 +204,5 @@ export { BackendMonitor as Monitor };
 const avido = new BackendMonitor(ctx);
 
 export default avido;
+
+export { observeOpenAI } from "./openai";

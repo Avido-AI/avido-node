@@ -16,8 +16,14 @@ const evaluation = createContext({
   AsyncLocalStorage,
 });
 
+const llmRunId = createContext({
+  asyncContext: true,
+  AsyncLocalStorage,
+});
+
 export default {
   runId,
   user,
   evaluation,
+  llmRunId,
 };

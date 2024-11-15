@@ -3,13 +3,12 @@
 
 import type { ChatMessage, ToolCallData, WrapExtras, WrappedReturn, cJSON } from "./types"
 
-import OpenAI from "openai"
-import { APIPromise } from "openai/core"
-import OpenAIStreaming from "openai/streaming"
+import type OpenAI from "openai"
+import type { APIPromise } from "openai/core"
+import type OpenAIStreaming from "openai/streaming"
 
+import avido from "./index"
 import { cleanExtra } from "./utils"
-
-import observer from "./index"
 
 const parseOpenaiMessage = (message: any) => {
   if (!message) return undefined
@@ -27,7 +26,7 @@ const parseOpenaiMessage = (message: any) => {
   } as ChatMessage
 }
 
-const parseToolCall = (toolCall: any): ToolCallData => {
+const parseToolCall = (toolCall: { id: string; function: { name: string; arguments: string } }): ToolCallData => {
   return {
     tool_call_id: toolCall.id,
     tool_call_name: toolCall.function.name,
@@ -38,6 +37,7 @@ const parseToolCall = (toolCall: any): ToolCallData => {
 
 // Forks a stream in two
 // https://stackoverflow.com/questions/63543455/how-to-multicast-an-async-iterable
+// biome-ignore lint/suspicious/noExplicitAny: TODO
 const teeAsync = (iterable: any) => {
   const AsyncIteratorProto = Object.getPrototypeOf(
     Object.getPrototypeOf(async function* () { }.prototype)
@@ -73,9 +73,10 @@ type NewParams = {
   metadata?: cJSON
 }
 
-type WrapCreateFunction<T, U> = (
+type WrapCreateFunction<T, _> = (
   body: (T & NewParams),
   options?: OpenAI.RequestOptions
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
 ) => WrappedReturn<any>
 
 type WrapCreate = {
@@ -118,7 +119,7 @@ const PARAMS_TO_CAPTURE = [
 
 type WrappedOpenAi<T> = Omit<T, "chat"> & WrapCreate
 
-export function observeOpenAI<T extends any>(
+export function observeOpenAI<T>(
   openai: T,
   params: WrapExtras = {}
 ): WrappedOpenAi<T> {
@@ -197,7 +198,7 @@ export function observeOpenAI<T extends any>(
     }
   }
 
-  const wrapped = observer.wrapModel(wrappedCreateChatCompletion, {
+  const wrapped = avido.wrapModel(wrappedCreateChatCompletion, {
     nameParser: (request) => request.model,
     inputParser: (request) => request.messages.map(parseOpenaiMessage),
     paramsParser: (request) => {
@@ -205,7 +206,12 @@ export function observeOpenAI<T extends any>(
       for (const param of PARAMS_TO_CAPTURE) {
         if (request[param]) rawExtra[param] = request[param]
       }
-      return cleanExtra(rawExtra)
+      return {
+        ...cleanExtra(rawExtra),
+        // Don't pass parentRunId here - let the LLM chain be independent
+        tools: request.tools || request.functions,
+        tool_choice: request.tool_choice || request.function_call
+      }
     },
     metadataParser(request) {
       const metadata = request.metadata
