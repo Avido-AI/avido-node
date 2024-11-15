@@ -29,11 +29,13 @@ class Avido {
   runtime?: string;
   onlySendEvals: boolean = true;
   queue: Event[] = [];
+
   private running = false;
+  private activeThread?: Thread;
 
   private shouldSendEvent(): boolean {
-    const evalContext = this.context?.evaluation;
-    return !this.onlySendEvals || !!evalContext?.id;
+    const hasEvaluationId = this.activeThread?.getEvaluationId();
+    return !this.onlySendEvals || !!hasEvaluationId;
   }
 
   /**
@@ -77,31 +79,19 @@ class Avido {
       return;
     }
 
-    // If onlySendEvals is true and we don't have an evaluationId, skip sending
-    if (!this.shouldSendEvent()) {
-      return;
-    }
+    if (!this.shouldSendEvent()) return;
 
-    let timestamp = Date.now();
-    const lastEvent = this.queue?.[this.queue.length - 1];
-    if (lastEvent && lastEvent.timestamp >= timestamp) {
-      timestamp = lastEvent.timestamp + 1;
-    }
+    const runtime = this.runtime;
+    const { runId, parentRunId, userId, evaluationId } = data;
 
-    const runId = generateUUID();
-    const parentRunId = data.parentRunId;
-    const userId = data.userId;
-    const evaluationId = data.evaluationId;
-    const runtime = data.runtime ?? this.runtime;
-
-    const eventData: Event = {
-      runId,
-      event,
+    const eventData = {
       type,
+      event,
+      runId: runId ?? generateUUID(),
       userId,
       parentRunId,
-      evaluationId,
-      timestamp,
+      evaluationId: evaluationId ?? this.activeThread?.getEvaluationId(),
+      timestamp: Date.now(),
       runtime,
       ...cleanExtra(data),
     };
@@ -130,13 +120,14 @@ class Avido {
     output: cJSON,
     parentRunId: string,
   ): void {
-    // Track tool call with current LLM event as parent
     this.trackEvent("tool", "end", {
+      runId: toolCallId,
+      parentRunId,
+      evaluationId: this.activeThread?.getEvaluationId(),
       tool_call_id: toolCallId,
       tool_call_name: toolName,
       tool_call_input: input,
       tool_call_output: output,
-      parentRunId,
     });
   }
 
@@ -181,7 +172,9 @@ class Avido {
       | { id?: string; userId?: string; evaluationId?: string }
   ) {
     const threadParams = typeof params === "string" ? { id: params } : params || {};
-    return new Thread(this, threadParams);
+    const thread = new Thread(this, threadParams);
+    this.activeThread = thread;
+    return thread;
   }
 
   /**

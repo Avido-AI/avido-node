@@ -30,6 +30,10 @@ export class Thread {
     this.evaluationId = options?.evaluationId
   }
 
+  getEvaluationId(): string | undefined {
+    return this.evaluationId;
+  }
+
   /**
    * Track a new message from the user
    *
