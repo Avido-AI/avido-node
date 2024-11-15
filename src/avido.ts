@@ -43,7 +43,7 @@ class Avido {
     this.init({
       appId: checkEnv("AVIDO_APP_ID"),
       apiKey: checkEnv("AVIDO_API_KEY"),
-      apiUrl: checkEnv("AVIDO_API_URL") ?? "https://api.avido.io/v1",
+      apiUrl: checkEnv("AVIDO_API_URL") ?? "https://api.avido.io/v0",
       runtime: "avido-node",
     });
 
