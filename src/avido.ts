@@ -178,7 +178,7 @@ class Avido {
   openThread(
     params?:
       | string
-      | { id?: string; tags?: string[]; userId?: string; userProps?: cJSON; evaluationId?: string }
+      | { id?: string; userId?: string; evaluationId?: string }
   ) {
     const threadParams = typeof params === "string" ? { id: params } : params || {};
     return new Thread(this, threadParams);

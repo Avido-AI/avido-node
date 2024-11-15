@@ -11,13 +11,7 @@ const user = createContext({
   AsyncLocalStorage,
 });
 
-const evaluation = createContext({
-  asyncContext: true,
-  AsyncLocalStorage,
-});
-
 export default {
   runId,
   user,
-  evaluation,
 };

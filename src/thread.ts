@@ -13,17 +13,21 @@ type Message = {
 export class Thread {
   public id: string
   private userId?: string
-  private monitor: Avido
+  private evaluationId?: string
+  private observer: Avido
 
   constructor(
-    monitor: Avido,
+    observer: Avido,
     options: {
       id?: string
       userId?: string
+      evaluationId?: string
     }
   ) {
-    this.monitor = monitor
+    this.observer = observer
     this.id = options?.id || generateUUID()
+    this.userId = options?.userId
+    this.evaluationId = options?.evaluationId
   }
 
   /**
@@ -36,23 +40,20 @@ export class Thread {
   trackMessage = (message: Message): string => {
     const runId = message.id ?? generateUUID()
 
-    const evaluationContext = this.monitor.context?.evaluation;
-    const evaluationId = evaluationContext?.id;
-    const onlySendEvals = this.monitor.onlySendEvals;
+    const onlySendEvals = this.observer.onlySendEvals;
 
     // Store the latest message runId in context
-    this.monitor.context = {
-      ...this.monitor.context,
+    this.observer.context = {
+      ...this.observer.context,
       lastMessageRunId: runId
     };
 
-    if (!onlySendEvals || !!evaluationId) {
-      // Track the message with the thread as parent
-      this.monitor.trackEvent("thread", "chat", {
+    if (!onlySendEvals || !!this.evaluationId) {
+      this.observer.trackEvent("thread", "chat", {
         runId,
         parentRunId: this.id,  // Use thread ID as parent
         userId: this.userId,
-        evaluationId,
+        evaluationId: this.evaluationId,
         message,
       })
     }
