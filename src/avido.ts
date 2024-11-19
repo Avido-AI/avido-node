@@ -121,7 +121,7 @@ class Avido {
     parentRunId: string,
   ): void {
     this.trackEvent("tool", "end", {
-      runId: toolCallId,
+      runId: generateUUID(),
       parentRunId,
       evaluationId: this.activeThread?.getEvaluationId(),
       tool_call_id: toolCallId,
