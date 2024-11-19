@@ -111,7 +111,7 @@ class Avido {
    * @param {string} toolName - The name of the tool being called
    * @param {cJSON} input - The input parameters for the tool
    * @param {cJSON} output - The output from the tool
-   * @param {string} [parentRunId] - Parent run ID to link this tool call to, usually the thread id
+   * @param {string} parentRunId - Parent run ID to link this tool call to, usually the thread id
    */
   trackToolCall(
     toolCallId: string,

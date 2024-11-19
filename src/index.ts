@@ -9,6 +9,7 @@ import Avido from "./avido";
 
 // Extended Avido class with backend-specific methods and context injection
 class BackendMonitor extends Avido {
+
   private wrap<T extends WrappableFn>(
     type: TraceType,
     func: T,
