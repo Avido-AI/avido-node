@@ -220,6 +220,38 @@ class Avido {
       }
     }
   }
+
+  async validateWebhook(payload: unknown, headers: Record<string, string>): Promise<boolean> {
+    if (!this.appId || !this.apiKey || !this.apiUrl) {
+      console.warn(
+        "Avido is not reporting anything. Please check your init() parameters."
+      );
+      return false;
+    }
+    try {
+      const response = await fetch(`${this.apiUrl}/validate-webhook`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.apiKey}`,
+          "x-avido-app-id": this.appId,
+          "x-avido-signature": headers["x-avido-signature"],
+          "x-avido-timestamp": headers["x-avido-timestamp"],
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        return false;
+      }
+
+      const data = await response.json();
+      return data.valid === true;
+    } catch (error) {
+      console.error("Error validating webhook signature:", error);
+      return false;
+    }
+  }
 }
 
 export default Avido;
