@@ -1,6 +1,6 @@
 {
   "name": "avido-node",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "The Avido Node.js SDK to interact with the Avido API.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
