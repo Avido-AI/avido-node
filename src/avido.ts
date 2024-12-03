@@ -111,7 +111,7 @@ class Avido {
    * @param {string} toolName - The name of the tool being called
    * @param {cJSON} input - The input parameters for the tool
    * @param {cJSON} output - The output from the tool
-   * @param {string} [parentRunId] - Parent run ID to link this tool call to, usually the thread id
+   * @param {string} parentRunId - Parent run ID to link this tool call to, usually the thread id
    */
   trackToolCall(
     toolCallId: string,
@@ -121,7 +121,7 @@ class Avido {
     parentRunId: string,
   ): void {
     this.trackEvent("tool", "end", {
-      runId: toolCallId,
+      runId: generateUUID(),
       parentRunId,
       evaluationId: this.activeThread?.getEvaluationId(),
       tool_call_id: toolCallId,
@@ -218,6 +218,38 @@ class Avido {
       if (counter === 10) {
         break;
       }
+    }
+  }
+
+  async validateWebhook(payload: unknown, headers: Record<string, string>): Promise<boolean> {
+    if (!this.appId || !this.apiKey || !this.apiUrl) {
+      console.warn(
+        "Avido is not reporting anything. Please check your init() parameters."
+      );
+      return false;
+    }
+    try {
+      const response = await fetch(`${this.apiUrl}/validate-webhook`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.apiKey}`,
+          "x-avido-app-id": this.appId,
+          "x-avido-signature": headers["x-avido-signature"],
+          "x-avido-timestamp": headers["x-avido-timestamp"],
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        return false;
+      }
+
+      const data = await response.json();
+      return data.valid === true;
+    } catch (error) {
+      console.error("Error validating webhook signature:", error);
+      return false;
     }
   }
 }
